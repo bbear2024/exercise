@@ -28,6 +28,11 @@ FROM airports;
 
 -- try: find the first and last date in the table 'flights' 
 
+SELECT MIN(flight_date) AS first_date
+FROM flights;
+
+SELECT MAX(flight_date) AS first_date
+FROM flights;
 
 /* 2. COUNT
  * Find out how many rows total are in the table.
@@ -36,7 +41,9 @@ SELECT COUNT(*)
 FROM airports;
 
 -- try: Combine count with a condition: How many airports are listed for Germany?
-
+SELECT COUNT(*)
+FROM airports
+WHERE country = 'Germany';
 
 /* 3. COUNT DISTINCT 
  * We've learned how to show only unique values of a column by using DISTINCT
@@ -56,6 +63,10 @@ FROM airports;
 			- number of unique airlines 
  */
 
+SELECT count(DISTINCT origin) AS num_unique_origin_airport_codes,
+	   count(DISTINCT tail_number) AS num_unique_tail_numbers,
+	   count(DISTINCT airline) AS num_unique_airlines
+FROM flights;
 
 -- 4. AVG()
 /* What is the average altitude of airports overall?
@@ -65,17 +76,22 @@ FROM airports;
 
 --try: What is the average flight time from Boston (BOS) to Honolulu (HNL)
 --	Hint: Use WHERE with two conditions.
-
+SELECT AVG(air_time) AS average_flight_time
+FROM flights
+WHERE origin = 'BOS' AND dest = 'HNL'
 
 -- 5. SUM()
 /* Find total distance of all flights in on the 1st of January 2024
  */
-SELECT SUM(distance) AS total_altitude
+SELECT SUM(distance) AS total_distance
 FROM flights
 WHERE flight_date = '2024-01-01';
 
 -- try: check the total flight time, basically how long would one plane to fly that distance 
 
+SELECT SUM(air_time) AS total_flight_time
+FROM flights
+WHERE flight_date = '2024-01-01';
 
 /* SIDEBAR: Mathematical Functions and Operators
 */
@@ -140,6 +156,7 @@ SELECT AVG(air_time) AS avg_air_time,
 FROM flights
 WHERE origin = 'BOS' AND dest = 'HNL';
 
+
 /* Modulo Operator:
 	The modulo operator (%) calculates the remainder when dividing one number by another.
 	For instance, 7 % 3 yields 1, as 7 divided by 3 leaves a remainder of 1.
@@ -173,6 +190,6 @@ WHERE alt >= 12400
 
 SELECT SUM(air_time) / 60 / 24 AS days,-- deviding total minutes to whole days
 	   SUM(air_time) / 60 % 24 AS hours, -- shows the remaining hours after deviding to whole days
-	   SUM(air_time) % 60 AS minutes, -- shows the remaining minutes after deviding to total hours,
+	   SUM(air_time) % 60 AS minutes -- shows the remaining minutes after deviding to total hours,
 FROM flights
 WHERE flight_date = '2024-01-01';

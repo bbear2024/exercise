@@ -36,7 +36,11 @@ FROM airports
 WHERE country = 'Iceland';
 
 -- try: find all airports in London
-
+SELECT name,
+	   city,
+	   country
+FROM airports
+WHERE city = 'London';
 
 -- 2: Operators: >= and <=
 
@@ -52,7 +56,13 @@ WHERE alt >= 12400
 ORDER BY alt;
 
 -- try: find airports where the timezone (tz) is smaller or equal to -11
-
+SELECT name,
+	   city,
+	   country,
+	   tz
+FROM airports
+WHERE tz <= -11;
+		
 
 -- 3. Pattern matching operators: LIKE and ILIKE
 /* The LIKE operator checks whether a text matches a specified pattern.
@@ -70,7 +80,12 @@ FROM airports
 WHERE faa LIKE 'XS%';
 
 -- try: find airports with 'Love' in their names 
-
+SELECT name, 
+	   city, 
+	   country,
+	   alt
+FROM airports
+WHERE name ILIKE '%Love%';
 
 -- 4: Operator: IN
 /* The IN operator in PostgreSQL is a Boolean operator that checks whether a specified value 
@@ -84,7 +99,9 @@ FROM airports
 WHERE city IN ('Hamburg', 'Berlin');
 
 -- try: select only the rows for these airlines: DL, NK, HA, AS
-
+SELECT * 
+FROM flights
+WHERE airline IN ('DL', 'NK', 'HA', 'AS')
 
 -- 5: Operator: BETWEEN
 /*  The BETWEEN operator allows you to check if a value falls within a specified interval. 
@@ -96,7 +113,10 @@ WHERE alt BETWEEN 11001 AND 13355
 ORDER BY alt;
 
 -- try: From flights table select only flights during the period: 2023-01-01 until 2023-01-03 
-
+SELECT *
+FROM flights
+WHERE flight_date BETWEEN '2023-01-01' AND '2023-01-03'
+--ORDER BY alt;
 
 -- 6: Conjunctive logical operators: AND, OR
 /* They allow you to combine multiple conditions in a query to narrow down selected data.
@@ -108,7 +128,7 @@ SELECT name,
 	   country,
 	   alt
 FROM airports
-WHERE NOT alt >= 12400 AND country <> 'China'
+WHERE alt >= 12400 AND country <> 'China'
 ORDER BY alt;
 
 -- OR - Combines multiple conditions and returns true if any of the conditions are true. 
@@ -136,7 +156,14 @@ ORDER BY alt;
 	or 
 	with longitude above 179 or below -179   
  */
-
+SELECT name,
+	   lat,
+	   lon,
+	   alt,
+	   city,
+	   country
+FROM airports
+WHERE (lat > 80 OR lat < -60) OR (lon > 179 OR lon <-179)
 
 -- 7: Negation logical operator: NOT
 /* The NOT operator negates a boolean expression. It inverts a condition.
@@ -153,7 +180,12 @@ ORDER BY city;
 -- try: find the opposite for this condition using NOT
 		WHERE alt >= 12400 AND (country = 'China' OR country = 'Nepal') 
  */
-
+SELECT name, 
+	   city, 
+	   country
+FROM airports
+WHERE NOT (alt >= 12400 AND (country = 'China' OR country = 'Nepal') )
+ORDER BY city;
 
 
 -- 8:
@@ -184,7 +216,9 @@ WHERE country = 'Philippines'
   AND city IS NULL;
 
 -- try: find airports with missing tz values, but not missing city values
-
+SELECT *
+FROM airports
+WHERE tz IS NULL;
  
 /* 
 Teaching Tips:

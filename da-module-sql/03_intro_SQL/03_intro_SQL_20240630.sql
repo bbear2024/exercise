@@ -22,7 +22,7 @@
 SELECT * FROM airports;
 
 -- try it with another table e.g. 'flights':
-
+SELECT * FROM flights;
 
 -- 2. SELECT specific columns from the table 'airports'
 /* Instead of the *, you select the name of the column to select.
@@ -31,7 +31,8 @@ SELECT name
 FROM airports;
 
 -- try it with another column:
-
+SELECT city
+FROM airports;
 
 -- To select multiple columns from a table, simply separate the column names with commas
 SELECT faa,
@@ -41,7 +42,12 @@ SELECT faa,
 FROM airports;
 
 -- try changing the order of columns, or select same column twice:
-
+SELECT city,
+	   name,
+	   faa,
+	   country,
+	   name
+FROM airports;
 
 -- 4. LIMIT the output 
 /* For example we can limit our result to the first 15 rows and all columns from a table 
@@ -51,7 +57,9 @@ FROM airports
 LIMIT 15;
 
 -- try it with 'flights', e.g. limit it to 1:
-
+SELECT *
+FROM flights
+LIMIT 1;
 
 -- 5. ORDER BY - Sorting Data
 /* The ORDER BY command is used to sort the result set in ascending or descending order.
@@ -65,6 +73,16 @@ ORDER BY country ASC, city DESC;
 
 -- try it with the table 'life_expectancy' order it by the column 'life_expectancy'
 -- how could you find the top 5 life_expectancy values?:
+SELECT *
+FROM life_expectancy
+ORDER BY life_expectancy DESC
+LIMIT 5;
+
+SELECT *
+FROM life_expectancy
+ORDER BY life_expectancy DESC
+OFFSET 2
+LIMIT 5;
 
 
 -- 6. SELECT DISTINCT (unique)
@@ -83,6 +101,8 @@ FROM airports
 ORDER BY country
   
 -- try finding unique airlines in the table 'flights':
+SELECT DISTINCT airline
+FROM flights;
 
 -- 7. Forming the result set
 /* In a SELECT statement, we shape the output — the result table. 
@@ -96,9 +116,10 @@ ORDER BY country
 SELECT name, 
 	   city, 
 	   country,
-	   alt,
+	   alt
 FROM airports
 ORDER BY alt;
+
 
 /* try: NOT selecting the column 'name' 
  * also add two columns with some repeating text and a calculation of altitude from feet to meters:
@@ -106,7 +127,14 @@ ORDER BY alt;
 		'anything',
 	 	alt / 3.28084
  */ 
-
+SELECT name, 
+	   city, 
+	   country,
+	   -- alt
+	   UPPER(country),
+	   alt / 3.28084
+FROM airports
+ORDER BY alt;
 
 -- 8. Aliasing column names
 /* you can change names of columns (aliasing) by adding them with an AS keyword
@@ -117,7 +145,15 @@ ORDER BY alt;
 		alt AS alt_ft,
 		alt / 3.28084 AS alt_m	   
 */
-
+SELECT name, 
+	   city, 
+	   country,
+	   alt AS alt_ft,
+	   'anything' AS random_text,
+	   UPPER(country) AS country_caps,
+	   alt / 3.28084 AS alt_m
+FROM airports
+ORDER BY alt;
 
 --9. Documenting Code
 /* Adding comments or disabling parts of your query for tests (commenting-out).

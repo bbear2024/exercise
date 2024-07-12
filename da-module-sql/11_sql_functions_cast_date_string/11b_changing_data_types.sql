@@ -43,8 +43,6 @@ For a complete picture, please have a look at: https://www.postgresql.org/docs/c
 */
 
 
-
-
 /* CAST
  * with type casting you can 'cast' a object to a new data type. this only works when the object is 
  * 'castable' to that type, for instance you can cast a integer to text, but you cannot cast 
@@ -59,26 +57,26 @@ FROM flights;
 SELECT flight_number::VARCHAR
 FROM flights;
 
--- cast string to date type
--- 3 ways to write the same thing :-( 
-SELECT CAST('2021-01-01' AS DATE);
-SELECT '2021-01-01'::DATE;
+-- CAST string to date type
+SELECT flight_date, 
+	   CAST(flight_date AS DATE),
+	   flight_date::DATE
+FROM flights
 
 -- create a column of a specific type 
 -- create a column as date (passing a string)
-SELECT DATE '2021-01-01';
--- create a int as date (passing a string)
-SELECT INT '2021.00';
+SELECT country, 
+	   DATE '2020-01-01' AS one_date,
+	   INT '2030' AS the_year
+FROM regions;
 
-/* In the example below we want to extract the year from the flight_date column.
- * For that we need to extract the first four characters. The function LEFT() is perfect for this.
- * Simply place the column inside the function and specifiy the number of characters, starting from
- * the left, you would like to extract. Unfortunately, this function only works with character type columns.
- * flight_date is of type DATE. We can change this by casting the column to type VARCHAR.
+
+/* In the example below we want to extract the year and the month from the flight_date column.
+ * For that we need to extract the first 7 characters. The function LEFT() is perfect for this.
+ * Hoever, this function only works with character type columns.
+ * flight_date is of type DATE. We can change this by casting the column to type TEXT or VARCHAR.
 */
-SELECT LEFT(flight_date,4)
-from flights;
 
--- if we first cast flight_date to VARCHAR it works, yay! 
-SELECT LEFT(flight_date::VARCHAR,4)
+SELECT LEFT(flight_date::TEXT, 7) AS month_year, RIGHT(flight_date::DATE::TEXT, 2) AS date
 from flights
+

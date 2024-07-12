@@ -189,6 +189,23 @@ DROP TABLE IF EXISTS countries_selection;
  * 		- fill it with data
  */
 
+DROP TABLE IF EXISTS countries_selection;
+CREATE TABLE countries_selection (
+	   state VARCHAR(255) UNIQUE, -- column accepts only unique values
+	   le_avg NUMERIC NOT NULL, -- the column is not allowing NULL values
+	   record_start INTEGER,
+	   record_end INTEGER,
+	   record_duration INTEGER
+	   );
+INSERT INTO countries_selection (state, le_avg, record_start, record_end, record_duration)
+SELECT country, 
+	   ROUND(avg_life_expectancy::NUMERIC, 2), 
+	   first_year, 
+	   last_year, 
+	   period_length
+FROM countries
+WHERE country IN ('Andorra', 'Brazil', 'Germany', 'Nepal', 'Iceland' );
+
 /* Bonus topic: figure out a query to create a table and insert data from a csv file. 
  * Don't take Graphic interface shortcuts, use queries. */ 
 

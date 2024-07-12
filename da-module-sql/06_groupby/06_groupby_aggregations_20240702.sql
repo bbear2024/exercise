@@ -36,6 +36,7 @@ GROUP BY country
  */
 SELECT country,
 	   COUNT(*) AS total_years,
+	   AVG(life_expectancy) AS average_life_expectancy
 	   -- enter your code here
 FROM life_expectancy
 GROUP BY country
@@ -51,9 +52,11 @@ GROUP BY country
 SELECT country,
 	   AVG(life_expectancy) AS avg_life_expectancy, --keep it for the comparison
 	   -- add your code here
+	   ROUND(CAST(AVG(life_expectancy) AS NUMERIC), 2) AS avg_life_expectancy_round
 FROM life_expectancy
 GROUP BY country
 -- add your code here
+ORDER BY avg_life_expectancy DESC
 
 
 /* ### 4. GROUP BY and WHERE
@@ -66,6 +69,7 @@ GROUP BY country
  * 		Here we filter for some countries in a WHERE clause before grouping by them.
  * 
  */
+
 SELECT country,
 		ROUND(AVG(life_expectancy)) AS avg_life_expectancy
 FROM life_expectancy
@@ -84,7 +88,7 @@ ORDER BY avg_life_expectancy DESC;
 SELECT country,
 		ROUND(AVG(life_expectancy)) AS avg_life_expectancy
 FROM life_expectancy
-WHERE -- add code here: filter the average life expectancy >= 50
+WHERE AVG(life_expectancy) >=50-- add code here: filter the average life expectancy >= 50
 GROUP BY country
 ORDER BY avg_life_expectancy DESC;
 

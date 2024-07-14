@@ -40,5 +40,42 @@ ON airports.faa = arrival.dest;
  * Q3. On a 2023-12-23 find 3 cities: 
  * - city the most count of flights (departing) per day
  * - city with the most unique planes departed
- * - city with them most unique airlines active
+ * - city with the most unique airlines active
  */
+
+WITH most_flights AS (
+	SELECT city,
+			count(*) AS no_flights
+	FROM airports a 
+	RIGHT JOIN flights
+	ON a.faa = flights.origin 
+	WHERE flight_date = '2023-12-23'
+	GROUP BY city
+	ORDER BY no_flights DESC
+	LIMIT 1
+	),
+	most_planes as(
+	SELECT city,
+			count(DISTINCT tail_number) AS no_planes
+	FROM airports a 
+	RIGHT JOIN flights
+	ON a.faa = flights.origin 
+	WHERE flight_date = '2023-12-23'
+	GROUP BY city
+	ORDER BY no_planes DESC
+	LIMIT 1
+	),
+	most_airlines as(
+	SELECT city,
+			count(DISTINCT airline) AS no_airlines
+	FROM airports a 
+	RIGHT JOIN flights
+	ON a.faa = flights.origin 
+	WHERE flight_date = '2023-12-23'
+	GROUP BY city
+	ORDER BY no_airlines DESC
+	LIMIT 1
+	)
+SELECT city, no_flights, no_planes, no_airlines FROM most_flights
+FULL JOIN most_planes USING (city)
+FULL JOIN most_airlines USING (city)

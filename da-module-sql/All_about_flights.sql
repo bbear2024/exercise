@@ -25,5 +25,32 @@ SELECT count(DISTINCT tail_number)
 FROM flights
 WHERE airline = 'YX';
 
-SELECT *
-FROM flights;
+--which route has the longest distance?   BOS => HNL 5,095 miles
+SELECT origin, a.name, a.city, dest, a2.name, a2.city, ROUND(distance * 1.609) AS distance_km FROM flights f
+JOIN airports a 
+ON f.origin = a.faa 
+JOIN airports a2 
+ON f.dest = a2.faa 
+ORDER BY distance DESC
+LIMIT 1;
+
+--which route has the highest altitude change? ASE => SFO 2379m
+
+SELECT origin, a.name, a.city, a.alt, dest, a2.name, a2.city, a2.alt, ROUND(ABS(a.alt - a2.alt) / 3.281) AS altitude_change_m FROM flights f
+JOIN airports a 
+ON f.origin = a.faa 
+JOIN airports a2 
+ON f.dest = a2.faa 
+ORDER BY altitude_change_m DESC
+LIMIT 1;
+
+--highest and lowest airport in flights table
+--Aspen-Pitkin Co/Sardy Field / Aspen / 7820 ft
+--Key West International Airport / Key West / 3 ft
+
+SELECT DISTINCT origin, a.name, a.city, a.alt FROM flights f
+JOIN airports a 
+ON f.origin = a.faa
+ORDER BY alt
+LIMIT 1;
+

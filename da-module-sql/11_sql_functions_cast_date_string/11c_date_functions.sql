@@ -43,7 +43,7 @@ FROM flights;
 SELECT flight_date, 
 		EXTRACT(DAY FROM flight_date) AS flight_day,
 		EXTRACT(MONTH FROM flight_date) AS flight_month,
-		EXTRACT(WEEK FROM flight_date) AS flight_year,
+		EXTRACT(WEEK FROM flight_date) AS flight_week,
 		tail_number
 FROM flights;
 
@@ -64,6 +64,16 @@ SELECT flight_date,
 	   TO_CHAR(dep_time, 'fm0000')::TIME AS dep_time_TIME,
 	   flight_date + TO_CHAR(dep_time, 'fm0000')::TIME AS date_time
 FROM flights
+
+
+select To_Char("Date", 'DAY'), * from "MyTable"; -- TUESDAY
+select To_Char("Date", 'Day'), * from "MyTable"; -- Tuesday
+select To_Char("Date", 'day'), * from "MyTable"; -- tuesday
+select To_Char("Date", 'dy'), * from "MyTable";  -- tue
+select To_Char("Date", 'Dy'), * from "MyTable";  -- Tue
+select To_Char("Date", 'DY'), * from "MyTable";  -- TUE
+select To_Char("Date", 'D'), * from "MyTable";   -- 3 From Docs:    day of the week, Sunday (1) to Saturday (7)
+
 
 -- Note: Timestamps can also be used to filter easily using different comparison operators.
 

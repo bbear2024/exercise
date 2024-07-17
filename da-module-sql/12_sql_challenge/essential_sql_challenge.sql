@@ -455,3 +455,183 @@ ORDER BY sched_shorter_than_actual_rate DESC;
 
 
 
+
+
+
+/*Using another method
+ * 
+ * 1. Cleaning data
+ * dep_time is null:	112,026
+ * dep_time is null AND (cancelled = 1 or diverted = 1):	112,026
+ * arr_time is null:	118,650
+ * dep_time is not null and arr_time is null:	6624
+ * 118,650 - 112,026 = 6624 matching
+ * 
+ * dep_time is not null and arr_time is NULL AND cancelled = 1:	4428
+ * dep_time is not null and arr_time is NULL AND diverted = 1:	2195
+ * arr_time is null AND diverted = 1:	2195
+ * dep_time is not null and arr_time is NULL AND (cancelled = 0 AND diverted = 0):	1
+ * 118,650 - 2195 = 116,455
+ * 
+ * cancelled = 1 and diverted = 0:	116,454
+ * cancelled = 0 and diverted = 1:	20,248
+ * cancelled = 1 and diverted = 1:	0
+ * cancelled = 1 or diverted = 1: 136,702
+ * actual_elapsed_time is NULL:	136,703
+ * 
+ * diverted = 1 AND actual_elapsed_time IS NOT NULL:	0, no actual_elapsed_time for diverted flights recorded
+ */
+
+SELECT * FROM flights
+WHERE actual_elapsed_time is NULL;
+
+
+
+
+/*Now we dont have null value for dep_time and arr_time
+ * need to add time zone
+ */
+
+SELECT flight_date, dep_time, a.tz AS origin_tz, arr_time, a2.tz AS dest_tz , actual_elapsed_time FROM flights f
+JOIN airports a
+ON f.origin = a.faa
+JOIN airports a2
+ON f.origin = a2.faa
+WHERE arr_time is NOT NULL;
+
+
+
+
+/*Now it is time to find departure and arrival date and time in UTC
+ */
+
+WITH ff AS (
+			SELECT flight_date, dep_time, a.tz AS origin_tz, arr_time, a2.tz AS dest_tz , actual_elapsed_time , arr_delay FROM flights f
+			JOIN airports a
+			ON f.origin = a.faa
+			JOIN airports a2
+			ON f.dest = a2.faa
+			WHERE arr_time is NOT NULL AND actual_elapsed_time IS NOT NULL
+			)
+SELECT flight_date, dep_time, origin_tz,
+	   (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * origin_tz + (dep_time / 100) * INTERVAL '1 hour' 
+	   + (dep_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' AS dep_time_utc,
+	   arr_time, dest_tz,
+	   (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * dest_tz + (arr_time / 100) * INTERVAL '1 hour' + 
+	   (arr_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' AS arr_time_utc,
+	   MAKE_INTERVAL(mins => actual_elapsed_time::INT) AS actual_elapsed_time
+FROM ff;
+
+
+
+
+/* Find the overnight flights
+ * Using case when, if dep_time > arr_time, it means it is a overnight flight
+ */
+
+WITH ff AS (
+			SELECT flight_date, dep_time, a.tz AS origin_tz, arr_time, a2.tz AS dest_tz , actual_elapsed_time , arr_delay FROM flights f
+			JOIN airports a
+			ON f.origin = a.faa
+			JOIN airports a2
+			ON f.dest = a2.faa
+			WHERE arr_time is NOT NULL AND actual_elapsed_time IS NOT NULL
+			),
+	fff AS 	(SELECT flight_date, dep_time, origin_tz,
+			   (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * origin_tz + (dep_time / 100) * INTERVAL '1 hour' 
+			   + (dep_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' AS dep_time_utc,
+			   arr_time, dest_tz,
+			   CASE WHEN (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * origin_tz + (dep_time / 100) * INTERVAL '1 hour' 
+				   + (dep_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' > 
+				   (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * dest_tz + (arr_time / 100) * INTERVAL '1 hour' + 
+				   (arr_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' 
+				   THEN (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * dest_tz + (arr_time / 100) * INTERVAL '1 hour' + 
+				   (arr_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' + INTERVAL '1 day'
+				   ELSE (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * dest_tz + (arr_time / 100) * INTERVAL '1 hour' + 
+				   (arr_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC'
+			   END AS arr_time_utc,
+			   MAKE_INTERVAL(mins => actual_elapsed_time::INT) AS actual_elapsed_time
+			FROM ff
+			)
+SELECT 	dep_time_utc, 
+		arr_time_utc,
+		arr_time_utc - dep_time_utc AS flight_duration,
+		actual_elapsed_time,
+		(arr_time_utc - dep_time_utc) = actual_elapsed_time AS comparation
+FROM fff;
+
+
+
+
+/*Calculate the matching rate
+ * result
+ * num_flights	num_matched	match_percentage
+ * 8,369,455	7,968,148	95.21%
+ */
+
+WITH ff AS (
+			SELECT flight_date, dep_time, a.tz AS origin_tz, arr_time, a2.tz AS dest_tz , actual_elapsed_time , arr_delay FROM flights f
+			JOIN airports a
+			ON f.origin = a.faa
+			JOIN airports a2
+			ON f.dest = a2.faa
+			WHERE arr_time is NOT NULL AND actual_elapsed_time IS NOT NULL
+			),
+	fff AS 	(SELECT flight_date, dep_time, origin_tz,
+			   (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * origin_tz + (dep_time / 100) * INTERVAL '1 hour' 
+			   + (dep_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' AS dep_time_utc,
+			   arr_time, dest_tz,
+			   CASE WHEN (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * origin_tz + (dep_time / 100) * INTERVAL '1 hour' 
+				   + (dep_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' > 
+				   (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * dest_tz + (arr_time / 100) * INTERVAL '1 hour' + 
+				   (arr_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' 
+				   THEN (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * dest_tz + (arr_time / 100) * INTERVAL '1 hour' + 
+				   (arr_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' + INTERVAL '1 day'
+				   ELSE (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * dest_tz + (arr_time / 100) * INTERVAL '1 hour' + 
+				   (arr_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC'
+			   END AS arr_time_utc,
+			   MAKE_INTERVAL(mins => actual_elapsed_time::INT) AS actual_elapsed_time
+			FROM ff
+			)
+SELECT 	count(*) AS num_flights,
+		SUM(((arr_time_utc - dep_time_utc) = actual_elapsed_time)::INT) AS num_matched,
+		ROUND(SUM(((arr_time_utc - dep_time_utc) = actual_elapsed_time)::INT)*100.0/count(*), 2) AS match_percentage		
+FROM fff;
+
+
+/*Find unmatched
+*
+*/
+
+WITH ff AS (
+			SELECT flight_date, dep_time, a.tz AS origin_tz, origin, arr_time, a2.tz AS dest_tz , dest, actual_elapsed_time FROM flights f
+			JOIN airports a
+			ON f.origin = a.faa
+			JOIN airports a2
+			ON f.dest = a2.faa
+			WHERE arr_time is NOT NULL AND actual_elapsed_time IS NOT NULL
+			),
+	fff AS 	(SELECT flight_date, dep_time, origin_tz,
+			   (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * origin_tz + (dep_time / 100) * INTERVAL '1 hour' 
+			   + (dep_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' AS dep_time_utc,
+			   origin, arr_time, dest_tz,
+			   CASE WHEN (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * origin_tz + (dep_time / 100) * INTERVAL '1 hour' 
+				   + (dep_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' > 
+				   (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * dest_tz + (arr_time / 100) * INTERVAL '1 hour' + 
+				   (arr_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' 
+				   THEN (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * dest_tz + (arr_time / 100) * INTERVAL '1 hour' + 
+				   (arr_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC' + INTERVAL '1 day'
+				   ELSE (flight_date AT TIME ZONE 'UTC' - INTERVAL '1 hour' * dest_tz + (arr_time / 100) * INTERVAL '1 hour' + 
+				   (arr_time % 100) * INTERVAL '1 minute') AT TIME ZONE 'UTC'
+			   END AS arr_time_utc, 
+			   dest,
+			   MAKE_INTERVAL(mins => actual_elapsed_time::INT) AS actual_elapsed_time
+			FROM ff
+			)
+SELECT 	dep_time_utc, origin, origin_tz,
+		arr_time_utc, dest, dest_tz,
+		arr_time_utc - dep_time_utc AS flight_duration,
+		actual_elapsed_time
+FROM fff
+WHERE (arr_time_utc - dep_time_utc) <> actual_elapsed_time;
+

@@ -26,7 +26,8 @@ FROM flights
 WHERE airline = 'YX';
 
 --which route has the longest distance?   BOS => HNL 5,095 miles
-SELECT origin, a.name, a.city, dest, a2.name, a2.city, ROUND(distance * 1.609) AS distance_km FROM flights f
+SELECT origin, a.name, a.city, dest, a2.name, a2.city, 
+	   ROUND(distance * 1.609) AS distance_km FROM flights f
 JOIN airports a 
 ON f.origin = a.faa 
 JOIN airports a2 
@@ -36,7 +37,8 @@ LIMIT 1;
 
 --which route has the highest altitude change? ASE => SFO 2379m
 
-SELECT origin, a.name, a.city, a.alt, dest, a2.name, a2.city, a2.alt, ROUND(ABS(a.alt - a2.alt) / 3.281) AS altitude_change_m FROM flights f
+SELECT origin, a.name, a.city, a.alt, dest, a2.name, a2.city, a2.alt, 
+	   ROUND(ABS(a.alt - a2.alt) / 3.281) AS altitude_change_m FROM flights f
 JOIN airports a 
 ON f.origin = a.faa 
 JOIN airports a2 
@@ -53,4 +55,19 @@ JOIN airports a
 ON f.origin = a.faa
 ORDER BY alt
 LIMIT 1;
+
+/*on which day has the highest number of cancelled flights?
+ * ON 2024-01-15 because of winter storm
+ * https://www.forbes.com/sites/mollybohannon/2024/01/15/more-than-3700-flight-delays-and-cancellations-monday-as-arctic-blast-linger-in-us/
+ * ON 2023-02-01 becuase of ice storm
+ * https://www.reuters.com/world/us/airlines-cancel-over-1400-us-flights-ice-storm-hits-multiple-states-2023-02-01/
+ * ON 2023-6-26 because of severe thunderstorm across East Coast
+ * https://www.forbes.com/sites/mollybohannon/2023/06/26/flight-cancellations-and-delays-cause-gridlock-across-east-coast-6500-flights-affected/
+ */
+
+
+SELECT flight_date, TO_CHAR(flight_date,'Dy'), SUM(cancelled) AS num_cancelled, COUNT(*) AS num_flights 
+FROM flights
+GROUP BY flight_date
+ORDER BY num_cancelled DESC;
 

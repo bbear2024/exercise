@@ -1,11 +1,8 @@
 ## To-Do's
 
-- adapt both options to simple API showcase and then call meteostat Weather
-- update exercises (at least in option B)
 
-
-by the end of the day, students should have a script
+by the end of the day, you should have scripts for daily and hourly meteostat JSON API endpoints
 
 - reading env
-- calling the api 
+- calling the API
 - pushing raw data to DB
